@@ -1,5 +1,6 @@
 import cv2
 
+
 class SimplePreprocessor:
     def __init__(self, width, height, inter=cv2.INTER_AREA):
         """Takes Image as input
