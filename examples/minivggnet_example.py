@@ -1,6 +1,7 @@
 import argparse
 
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 import numpy as np
 from imutils import paths
 from keras.callbacks import Callback, ModelCheckpoint
