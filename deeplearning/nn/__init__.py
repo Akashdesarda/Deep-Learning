@@ -1,1 +1,1 @@
-from .conv.shallownet import ShallowNet
+from .conv import MinivVGGNet, ShallowNet

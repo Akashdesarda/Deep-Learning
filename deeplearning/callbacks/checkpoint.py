@@ -1,8 +1,9 @@
-from keras.callbacks import BaseLogger, Callback, ModelCheckpoint
+import json
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import json
+from keras.callbacks import BaseLogger, ModelCheckpoint
 
 
 class TrainingMonitor(BaseLogger):
@@ -70,11 +71,11 @@ class SaveModel:
      def __init__(self, filePath, monitorMetric='val_loss', saveMultiple=False):
          """Callback to save model at suplied directory at respective checkpoint
 
-         Args:
-             filePath (str): directory path to save model.
-             monitorMetric (str, optional): Metric to used for saving model. Defaults to 'val_loss'. It can be also 'loss','accuracy','val_accuracy'
-             saveMultiple (bool, optional): To save only single model or every better model. Defaults to 'False' to save only single best model and 'True' to save every better model.
-         """
+            Args:
+                filePath (str): directory path to save model.
+                monitorMetric (str, optional): Metric to used for saving model. Defaults to 'val_loss'. It can be also 'loss','accuracy','val_accuracy'
+                saveMultiple (bool, optional): To save only single model or every better model. Defaults to 'False' to save only single best model and 'True' to save every better model.
+            """
         self.filePath = filePath
         self.monitorMetric = monitorMetric
         self.saveMultiple = saveMultiple

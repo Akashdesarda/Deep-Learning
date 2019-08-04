@@ -1,19 +1,16 @@
 import argparse
 
 import matplotlib.pyplot as plt
+
 matplotlib.use('Agg')
 import numpy as np
-from imutils import paths
-from keras.callbacks import Callback, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 from keras.datasets import cifar10
 from keras.optimizers import SGD
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelBinarizer
 
-from deeplearning.datasets import SimpleDatasetLoader
 from deeplearning.nn.conv import MinivVGGNet
-from deeplearning.preprocessing import ImageToArrayPreprocessor
-from deeplearning.preprocessing import SimplePreprocessor
 
 # Constructing the argument parser and then parsing the argument in it
 ap = argparse.ArgumentParser()
@@ -21,7 +18,13 @@ ap = argparse.ArgumentParser()
 # ap.add_argument('-c', '--classes', required=True, help='Total no of classes')
 ap.add_argument('-b', '--bath_size', required=True, help='Batch size for network to train')
 ap.add_argument('-e', '--epoch', required=True, help='No of epoch on which network will train')
+# device_name = sys.argv[5]
 args = vars(ap.parse_args())
+
+# if device_name == "gpu":
+#     device_name = "/gpu:0"
+# else:
+#     device_name = "/cpu:0"
 
 # Will grab images inside the given dataset
 print('[INFO] loading images inside given dataset')
