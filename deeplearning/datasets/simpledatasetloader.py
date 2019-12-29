@@ -1,8 +1,9 @@
 import os
+import sys
 import cv2
 import numpy as np
 from typing import List
-
+from tqdm import tqdm
 
 class SimpleDatasetLoader:
     def __init__(self, preprocessors: List=None):
@@ -12,15 +13,12 @@ class SimpleDatasetLoader:
         if self.preprocessors is None:
             self.preprocessors = []
 
-    def load(self, imagePaths: str, verbose: int=-1):
+    def load(self, imagePaths: str):
         """Load images and extract label name assuming path will be as:
            path/to/image/class/{image}.jpg
 
         Arguments:
             imagePaths [str] -- Path to the images
-
-        Keyword Arguments:
-            verbose {int} -- if < 0 then will show detail info (default: {-1})
             
         Returns:
             data {np.array} -- image data in numpy array 
@@ -29,7 +27,8 @@ class SimpleDatasetLoader:
         data = []
         labels = []
 
-        for (i, imagePath) in enumerate(imagePaths):
+        # with alive_bar(len(imagePaths)) as bar:    
+        for imagePath in tqdm(imagePaths):
             #Load image & extract class name make sure path must be
             # path/to/image/class/{image}.jpg
             image = cv2.imread(imagePath)
@@ -41,9 +40,8 @@ class SimpleDatasetLoader:
 
             data.append(image)
             labels.append(label)
-
-            #show verbose after every image
-            if verbose > 0 and i > 0:
-                print(f"[INFO] processed image {i + 1}/{len(imagePath)}")
+            # #show verbose after every image
+            # if verbose > 0 and i > 0:
+            #     print(f"[INFO] processed image {i + 1}/{len(imagePath)}")
 
         return (np.array(data), np.array(labels))
