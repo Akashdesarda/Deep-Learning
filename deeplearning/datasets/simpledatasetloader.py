@@ -1,19 +1,18 @@
 import os
-from ntpath import split
-
 import cv2
 import numpy as np
+from typing import List
 
 
 class SimpleDatasetLoader:
-    def __init__(self, preprocessors=None):
+    def __init__(self, preprocessors: List=None):
         self.preprocessors = preprocessors
 
         #if preprocessors is None then initialize as empty list
         if self.preprocessors is None:
             self.preprocessors = []
 
-    def load(self, imagePaths, verbose=-1):
+    def load(self, imagePaths: str, verbose: int=-1):
         """Load images and extract label name assuming path will be as:
            path/to/image/class/{image}.jpg
 
@@ -21,7 +20,11 @@ class SimpleDatasetLoader:
             imagePaths [str] -- Path to the images
 
         Keyword Arguments:
-            verbose {int} -- if < o then will show detail info (default: {-1})
+            verbose {int} -- if < 0 then will show detail info (default: {-1})
+            
+        Returns:
+            data {np.array} -- image data in numpy array 
+            labels {str} -- class name of respective image
         """
         data = []
         labels = []
@@ -41,7 +44,6 @@ class SimpleDatasetLoader:
 
             #show verbose after every image
             if verbose > 0 and i > 0:
-                print("[INFO] processed {}/{}".format(i + 1, len(imagePaths)))
+                print(f"[INFO] processed image {i + 1}/{len(imagePath)}")
 
         return (np.array(data), np.array(labels))
-
