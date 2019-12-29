@@ -21,12 +21,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 np.random.seed(seed=42)
 
 # Constructing the argument parser and then parsing the argument in it
-ap = argparse.ArgumentParser()
-ap.add_argument('-d', '--dataset', required=True, help='path to input dataset')
-ap.add_argument('-c', '--classes', required=True, help='Total no of classes')
-ap.add_argument('-b', '--batch_size', required=True, help='Batch size for network to train')
-ap.add_argument('-e', '--epoch', required=True, help='No of epoch on which network will train')
-args = vars(ap.parse_args())
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--dataset', type=str, required=True, help='path to input dataset')
+parser.add_argument('-c', '--classes', type=int, required=True, help='Total no of classes')
+parser.add_argument('-b', '--batch_size', type=int, required=True, help='Batch size for network to train')
+parser.add_argument('-e', '--epoch', type=int, required=True, help='No of epoch on which network will train')
+parser.add_argument('-l', '--limit_gpu_usage', default=True, help='Enable limiting gpu memory graph')
+args = vars(parser.parse_args())
 
 # Will grab images inside the given dataset
 print('[INFO] loading images inside given dataset')
@@ -52,17 +53,18 @@ model = ShallowNet.build(width=32, height=32, depth=3, classes=int(args['classes
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Limiting GPU memory growth
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-  try:
-    # Currently, memory growth needs to be the same across GPUs
-    for gpu in gpus:
-      tf.config.experimental.set_memory_growth(gpu, True)
-    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-  except RuntimeError as e:
-    # Memory growth must be set before GPUs have been initialized
-    print(e)
+if args['limit_gpu_usage'] is True:
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+    try:
+        # Currently, memory growth needs to be the same across GPUs
+        for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # Memory growth must be set before GPUs have been initialized
+        print(e)
 
 # training model
 print('[INFO] training network')
@@ -72,7 +74,7 @@ History = model.fit(x_train, y_train, validation_data=(x_test, y_test),
 # Evaluating model
 print('[INFO] Evaluating network...')
 pred = model.predict(x_test, batch_size=int(args['batch_size']))
-print(classification_report(y_test.argmax(axis=1), pred.argmax(axis=1), target_names=labels))
+print(classification_report(y_test.argmax(axis=1), pred.argmax(axis=1), target_names=['cat', 'dog', 'pandas']))
 
 # plot the training and accuracy
 plt.style.use('ggplot')
