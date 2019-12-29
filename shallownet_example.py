@@ -14,6 +14,7 @@ from keras.optimizers import SGD
 from imutils import paths
 import matplotlib.pyplot as plt
 import numpy as np
+from timeit import default_timer as timer
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -29,6 +30,7 @@ parser.add_argument('-e', '--epoch', type=int, required=True, help='No of epoch 
 parser.add_argument('-l', '--limit_gpu_usage', default=True, help='Enable limiting gpu memory graph')
 args = vars(parser.parse_args())
 
+start = timer()
 # Will grab images inside the given dataset
 print('[INFO] loading images inside given dataset')
 imagePaths = list(paths.list_images(args['dataset']))
@@ -76,11 +78,15 @@ print('[INFO] Evaluating network...')
 pred = model.predict(x_test, batch_size=int(args['batch_size']))
 print(classification_report(y_test.argmax(axis=1), pred.argmax(axis=1), target_names=['cat', 'dog', 'pandas']))
 
+end = timer()
+print(f"[INFO] Total time taken is {(end - start)/60:.4} min(s)")
 # plot the training and accuracy
 plt.style.use('ggplot')
 plt.figure()
 plt.plot(np.arange(0, int(args['epoch'])), History.history['loss'], label='train_loss')
 plt.plot(np.arange(0, int(args['epoch'])), History.history['val_loss'], label='val_loss')
+plt.plot(np.arange(0, int(args['epoch'])), History.history['accuracy'], label='train_acc')
+plt.plot(np.arange(0, int(args['epoch'])), History.history['val_accuracy'], label='val_acc')
 plt.title('Training loss and accuracy')
 plt.xlabel('Epoch no')
 plt.ylabel('Loss')
