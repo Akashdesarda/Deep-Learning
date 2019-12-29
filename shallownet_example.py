@@ -1,7 +1,11 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import argparse
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+import tensorflow as tf
 from deeplearning.preprocessing import ImageToArrayPreprocessor
 from deeplearning.preprocessing import SimplePreprocessor
 from deeplearning.datasets import SimpleDatasetLoader
@@ -11,13 +15,16 @@ from imutils import paths
 import matplotlib.pyplot as plt
 import numpy as np
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 np.random.seed(seed=42)
 
 # Constructing the argument parser and then parsing the argument in it
 ap = argparse.ArgumentParser()
 ap.add_argument('-d', '--dataset', required=True, help='path to input dataset')
 ap.add_argument('-c', '--classes', required=True, help='Total no of classes')
-ap.add_argument('-b', '--bath_size', required=True, help='Batch size for network to train')
+ap.add_argument('-b', '--batch_size', required=True, help='Batch size for network to train')
 ap.add_argument('-e', '--epoch', required=True, help='No of epoch on which network will train')
 args = vars(ap.parse_args())
 
@@ -31,18 +38,31 @@ iap = ImageToArrayPreprocessor()
 
 # load data from dataset & then convert into given pixel intensity
 dl = SimpleDatasetLoader(preprocessors=[sp, iap])
-(data, labels) = dl.load(imagePaths, verbose=1)
+(data, labels) = dl.load(imagePaths)
 data = data.astype('float') / 255.0
 
 (x_train, x_test, y_train, y_test) = train_test_split(data, labels,
                                                       test_size=0.25, random_state=42)
-y_train = LabelBinarizer.fit_transform(y_train)
-y_test = LabelBinarizer.fit_transform(y_test)
+y_train = LabelBinarizer().fit_transform(y_train)
+y_test = LabelBinarizer().fit_transform(y_test)
 
 print('[INFO] compiling model...')
 opt = SGD(lr=0.00105)
 model = ShallowNet.build(width=32, height=32, depth=3, classes=int(args['classes']))
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
+# Limiting GPU memory growth
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 # training model
 print('[INFO] training network')
