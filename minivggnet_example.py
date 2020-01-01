@@ -73,10 +73,6 @@ if args['limit_gpu_usage'] is True:
         except RuntimeError as e:
             # Memory growth must be set before GPUs have been initialized
             print(e)
-
-config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.9
-tf.keras.backend.set_session(tf.Session(config=config))
 # training model
 print('[INFO] training network')
 History = model.fit(x_train, y_train, validation_data=(x_test, y_test), callbacks=callback,
