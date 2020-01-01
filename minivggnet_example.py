@@ -16,8 +16,8 @@ from sklearn.preprocessing import LabelBinarizer
 from timeit import default_timer as timer
 
 from deeplearning.nn.conv import MinivVGGNet
-from deeplearning.callbacks.learningrate import step_decay
-
+from deeplearning.callbacks.learningrate import custom_lr
+lr = custom_lr(initAlpha =0.01, factor=0.25, dropEvery =5)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # Constructing the argument parser and then parsing the argument in it
@@ -48,7 +48,7 @@ print('[INFO] loading images inside given dataset')
 y_train = LabelBinarizer().fit_transform(y_train)
 y_test = LabelBinarizer().fit_transform(y_test)
 
-callback = [LearningRateScheduler(step_decay(epoch,initAlpha=0.001, factor=0.1, dropEvery=3))]
+callback = [LearningRateScheduler(lr.step_decay()]
 labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 print('[INFO] compiling model...')
