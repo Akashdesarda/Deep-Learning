@@ -48,7 +48,7 @@ print('[INFO] loading images inside given dataset')
 y_train = LabelBinarizer().fit_transform(y_train)
 y_test = LabelBinarizer().fit_transform(y_test)
 
-callback = [LearningRateScheduler(step_decay(initAlpha=0.001, factor=0.1, dropEvery=3))]
+callback = [LearningRateScheduler(step_decay(epoch,initAlpha=0.001, factor=0.1, dropEvery=3))]
 labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 print('[INFO] compiling model...')
