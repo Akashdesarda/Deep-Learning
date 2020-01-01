@@ -1,31 +1,36 @@
 import argparse
+import os
+import warnings
+warnings.filterwarnings('ignore')
 
 import matplotlib.pyplot as plt
-
+import matplotlib
 matplotlib.use('Agg')
 import numpy as np
-from keras.callbacks import ModelCheckpoint
+import tensorflow as tf
+from keras.callbacks import LearningRateScheduler
 from keras.datasets import cifar10
 from keras.optimizers import SGD
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelBinarizer
+from timeit import default_timer as timer
 
 from deeplearning.nn.conv import MinivVGGNet
+from deeplearning.callbacks.learningrate import step_decay
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # Constructing the argument parser and then parsing the argument in it
-ap = argparse.ArgumentParser()
-# ap.add_argument('-d', '--dataset', required=True, help='path to input dataset')
-# ap.add_argument('-c', '--classes', required=True, help='Total no of classes')
-ap.add_argument('-b', '--bath_size', required=True, help='Batch size for network to train')
-ap.add_argument('-e', '--epoch', required=True, help='No of epoch on which network will train')
+parser = argparse.ArgumentParser()
+# parser.add_argument('-d', '--dataset', required=True, help='path to input dataset')
+parser.add_argument('-c', '--classes', required=True, help='Total no of classes')
+parser.add_argument('-b', '--batch_size', required=True, help='Batch size for network to train')
+parser.add_argument('-e', '--epoch', required=True, help='No of epoch on which network will train')
+parser.add_argument('-l', '--limit_gpu_usage', default=True, help='Enable limiting gpu memory graph')
 # device_name = sys.argv[5]
-args = vars(ap.parse_args())
+args = vars(parser.parse_args())
 
-# if device_name == "gpu":
-#     device_name = "/gpu:0"
-# else:
-#     device_name = "/cpu:0"
-
+start = timer()
 # Will grab images inside the given dataset
 print('[INFO] loading images inside given dataset')
 # imagePaths = list(paths.list_images(args['dataset']))
@@ -40,9 +45,10 @@ print('[INFO] loading images inside given dataset')
 # data = data.astype('float') / 255.0
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-y_train = LabelBinarizer.fit_transform(y_train)
-y_test = LabelBinarizer.fit_transform(y_test)
+y_train = LabelBinarizer().fit_transform(y_train)
+y_test = LabelBinarizer().fit_transform(y_test)
 
+callback = [LearningRateScheduler(step_decay)]
 labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 print('[INFO] compiling model...')
@@ -53,11 +59,27 @@ model.compile(loss='categorical_crossentropy', optimizer=opt,
               metrics=['accuracy'])
 
 # Checkpoint to save best model
-save_model = ModelCheckpoint(filepath=, monitor='val_loss', save_best_only=True, mode='auto')
+# save_model = ModelCheckpoint(filepath=, monitor='val_loss', save_best_only=True, mode='auto')
+# Limiting GPU memory growth
+if args['limit_gpu_usage'] is True:
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
 
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.9
+tf.keras.backend.set_session(tf.Session(config=config))
 # training model
 print('[INFO] training network')
-History = model.fit(x_train, y_train, validation_data=(x_test, y_test),
+History = model.fit(x_train, y_train, validation_data=(x_test, y_test), callbacks=callback,
                     batch_size=int(args['batch_size']), epochs=int(args['epoch']))
 
 # Evaluating model
@@ -66,7 +88,7 @@ pred = model.predict(x_test, batch_size=int(args['batch_size']))
 print(classification_report(y_test.argmax(axis=1), pred.argmax(axis=1), target_names=labels))
 
 # plot the training and accuracy
-plt.style.use('ggplot')
+# plt.style.use('ggplot')
 plt.figure()
 plt.plot(np.arange(0, int(args['epoch'])), History.history['loss'], label='train_loss')
 plt.plot(np.arange(0, int(args['epoch'])), History.history['val_loss'], label='val_loss')
@@ -76,4 +98,7 @@ plt.title('Training loss and accuracy')
 plt.xlabel('Epoch no')
 plt.ylabel('Loss/Accuracy')
 plt.legend()
+end = timer()
+print(f"Total Time taken is {start - end}/60:.5 min(s)")
+
 plt.show()
